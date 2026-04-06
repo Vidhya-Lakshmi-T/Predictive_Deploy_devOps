@@ -20,7 +20,7 @@ pipeline {
 
     environment {
         // VM2 private IP — Ansible uses this to deploy
-        APP_SERVER_IP  = '10.0.0.5'          // replace with your VM2 PRIVATE IP
+        APP_SERVER_IP  = '40.80.93.95'          // replace with your VM2 PRIVATE IP
         APP_SERVER_USER = 'azureuser'
         API_URL        = "http://${APP_SERVER_IP}:8000"
         CONFUSION_THRESHOLD = '70'
