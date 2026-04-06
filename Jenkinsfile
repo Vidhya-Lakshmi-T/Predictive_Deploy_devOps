@@ -61,7 +61,7 @@ pipeline {
                 echo 'Running Python pytest on confusion engine and pattern analyzer...'
                 sh '''
                     
-                    pip3 install -r requirements.txt --break-system-packages
+                    pip3 install -r requirements.txt 
                     sleep 5
                     pytest backend/tests/ -v --tb=short
                 '''
