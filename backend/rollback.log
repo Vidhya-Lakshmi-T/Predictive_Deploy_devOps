@@ -1,0 +1,37 @@
+2026-04-06 23:06:16,325 [INFO] Active version set to: v2 (app_v2_broken.html)
+2026-04-06 23:07:35,598 [WARNING] ============================================================
+2026-04-06 23:07:35,678 [WARNING]    Session   : sess-t11m7mkxx-force
+2026-04-06 23:07:35,678 [WARNING]    Score     : 74.44
+2026-04-06 23:07:35,678 [WARNING]    Threshold : 70
+2026-04-06 23:07:35,678 [WARNING]    Reason    : Prediction was HIGH severity. Auto-triggered rollback without human intervention. Reason: Rage clicks (5) combined with scroll oscillation indicate severe navigation failure. User cannot find or activate target element.
+2026-04-06 23:07:35,678 [WARNING]    Time      : 2026-04-06T17:37:35.598663
+2026-04-06 23:07:35,678 [WARNING] ============================================================
+2026-04-06 23:07:35,678 [INFO] Active version set to: v1 (app_v1_stable.html)
+2026-04-06 23:07:35,700 [INFO] Users will now be served: app_v1_stable.html
+2026-04-06 23:08:32,778 [WARNING] ============================================================
+2026-04-06 23:08:32,788 [WARNING]    Session   : manual-dashboard
+2026-04-06 23:08:32,788 [WARNING]    Score     : 999
+2026-04-06 23:08:32,788 [WARNING]    Threshold : 70
+2026-04-06 23:08:32,789 [WARNING]    Reason    : Manual override / CI pipeline trigger
+2026-04-06 23:08:32,789 [WARNING]    Time      : 2026-04-06T17:38:32.777338
+2026-04-06 23:08:32,789 [WARNING] ============================================================
+2026-04-06 23:08:32,792 [INFO] Active version set to: v1 (app_v1_stable.html)
+2026-04-06 23:08:32,800 [INFO] Users will now be served: app_v1_stable.html
+2026-04-06 23:14:22,264 [WARNING] ============================================================
+2026-04-06 23:14:22,264 [WARNING]    Session   : sess-m055h4rku-force
+2026-04-06 23:14:22,264 [WARNING]    Score     : 74.44
+2026-04-06 23:14:22,264 [WARNING]    Threshold : 70
+2026-04-06 23:14:22,278 [WARNING]    Reason    : Prediction was HIGH severity. Auto-triggered rollback without human intervention. Reason: Rage clicks (5) combined with scroll oscillation indicate severe navigation failure. User cannot find or activate target element.
+2026-04-06 23:14:22,278 [WARNING]    Time      : 2026-04-06T17:44:22.264190
+2026-04-06 23:14:22,278 [WARNING] ============================================================
+2026-04-06 23:14:22,280 [INFO] Active version set to: v1 (app_v1_stable.html)
+2026-04-06 23:14:22,290 [INFO] Users will now be served: app_v1_stable.html
+2026-04-06 23:32:27,216 [WARNING] ============================================================
+2026-04-06 23:32:27,242 [WARNING]    Session   : sess-m055h4rku-force
+2026-04-06 23:32:27,243 [WARNING]    Score     : 74.44
+2026-04-06 23:32:27,243 [WARNING]    Threshold : 70
+2026-04-06 23:32:27,244 [WARNING]    Reason    : Prediction was HIGH severity. Auto-triggered rollback without human intervention. Reason: Rage clicks (5) combined with scroll oscillation indicate severe navigation failure. User cannot find or activate target element.
+2026-04-06 23:32:27,244 [WARNING]    Time      : 2026-04-06T18:02:27.216645+00:00
+2026-04-06 23:32:27,244 [WARNING] ============================================================
+2026-04-06 23:32:27,246 [INFO] Active version set to: v1 (app_v1_stable.html)
+2026-04-06 23:32:27,260 [INFO] Users will now be served: app_v1_stable.html

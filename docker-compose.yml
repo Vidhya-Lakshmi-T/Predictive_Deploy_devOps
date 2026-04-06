@@ -1,0 +1,58 @@
+# =============================================================================
+# docker-compose.yml — Local development stack
+# Starts: MongoDB + FastAPI backend + Streamlit dashboard
+#
+# Run: docker compose up
+# =============================================================================
+
+version: "3.9"
+
+services:
+
+  mongodb:
+    image: mongo:6
+    container_name: predictive-deploy-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: predictive-deploy-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend   # hot reload in dev
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  dashboard:
+    image: python:3.11-slim
+    container_name: predictive-deploy-dashboard
+    working_dir: /app
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - API_BASE=http://backend:8000
+    command: >
+      bash -c "pip install -q streamlit pandas requests &&
+               streamlit run dashboard/app.py --server.address 0.0.0.0"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

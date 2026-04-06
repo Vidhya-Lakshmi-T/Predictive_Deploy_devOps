@@ -1,0 +1,205 @@
+# =============================================================================
+# ansible/deploy.yml — Deploy playbook
+#
+# What this does on VM2 (app server):
+#   1. Installs Python, pip, MongoDB
+#   2. Copies the project files from VM1 to VM2
+#   3. Installs Python dependencies
+#   4. Sets active version to v2 (new deployment)
+#   5. Starts FastAPI backend on port 8000
+#   6. Starts Streamlit dashboard on port 8501
+#   7. Starts demo page HTTP server on port 5000
+# =============================================================================
+
+- name: Deploy Predictive Deployment Control to App Server
+  hosts: app_servers
+  become: yes   # run as sudo
+
+  vars:
+    project_dir: /opt/predictive-deploy
+    python_bin: /usr/bin/python3
+
+  tasks:
+
+    # ── 1. System dependencies ─────────────────────────────────────────────
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Python3 and pip
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - curl
+          - git
+        state: present
+
+    - name: Install MongoDB
+      block:
+        - name: Import MongoDB GPG key
+          shell: |
+            curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | \
+            gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg --dearmor
+          args:
+            creates: /usr/share/keyrings/mongodb-server-6.0.gpg
+
+        - name: Add MongoDB repo
+          shell: |
+            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] \
+            https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | \
+            tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+          args:
+            creates: /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+        - name: Install MongoDB packages
+          apt:
+            name: mongodb-org
+            state: present
+            update_cache: yes
+
+        - name: Start and enable MongoDB
+          systemd:
+            name: mongod
+            state: started
+            enabled: yes
+
+    # ── 2. Create project directory ────────────────────────────────────────
+    - name: Create project directory on VM2
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        owner: azureuser
+        group: azureuser
+        mode: '0755'
+
+    - name: Create log directory
+      file:
+        path: "{{ project_dir }}/logs"
+        state: directory
+        owner: azureuser
+        group: azureuser
+
+    # ── 3. Copy project files from Jenkins VM (VM1) to VM2 ────────────────
+    - name: Copy backend files
+      synchronize:
+        src: "{{ playbook_dir }}/../backend/"
+        dest: "{{ project_dir }}/backend/"
+        delete: yes
+        recursive: yes
+
+    - name: Copy frontend files
+      synchronize:
+        src: "{{ playbook_dir }}/../frontend/"
+        dest: "{{ project_dir }}/frontend/"
+        delete: yes
+        recursive: yes
+
+    - name: Copy dashboard files
+      synchronize:
+        src: "{{ playbook_dir }}/../dashboard/"
+        dest: "{{ project_dir }}/dashboard/"
+        delete: yes
+        recursive: yes
+
+    # ── 4. Install Python dependencies ────────────────────────────────────
+    - name: Install Python packages
+      pip:
+        name:
+          - fastapi==0.111.0
+          - uvicorn[standard]==0.29.0
+          - pymongo==4.7.2
+          - pydantic==2.7.1
+          - streamlit==1.35.0
+          - pandas==2.2.2
+          - requests==2.32.2
+        executable: pip3
+        state: present
+
+    # ── 5. Set active version to v2 (new deployment being tested) ─────────
+    - name: Set active version to v2 (new deployment)
+      copy:
+        content: "v2"
+        dest: "{{ project_dir }}/frontend/active_version.txt"
+        owner: azureuser
+
+    - name: Make rollback script executable
+      file:
+        path: "{{ project_dir }}/backend/rollback_simulate.sh"
+        mode: '0755'
+
+    # ── 6. Stop any existing running processes ─────────────────────────────
+    - name: Kill existing FastAPI process
+      shell: pkill -f "uvicorn main:app" || true
+      ignore_errors: yes
+
+    - name: Kill existing Streamlit process
+      shell: pkill -f "streamlit run" || true
+      ignore_errors: yes
+
+    - name: Kill existing HTTP server on port 5000
+      shell: pkill -f "http.server 5000" || true
+      ignore_errors: yes
+
+    - name: Wait for ports to free up
+      wait_for:
+        timeout: 3
+
+    # ── 7. Start FastAPI backend ───────────────────────────────────────────
+    - name: Start FastAPI backend on port 8000
+      shell: |
+        cd {{ project_dir }}/backend
+        nohup python3 -m uvicorn main:app \
+          --host 0.0.0.0 \
+          --port 8000 \
+          > {{ project_dir }}/logs/fastapi.log 2>&1 &
+        echo $! > {{ project_dir }}/fastapi.pid
+      become_user: azureuser
+
+    - name: Wait for FastAPI to start
+      wait_for:
+        port: 8000
+        host: localhost
+        timeout: 30
+
+    - name: Verify FastAPI health
+      uri:
+        url: http://localhost:8000/health
+        method: GET
+        status_code: 200
+      retries: 5
+      delay: 3
+
+    # ── 8. Start Streamlit dashboard ───────────────────────────────────────
+    - name: Start Streamlit dashboard on port 8501
+      shell: |
+        cd {{ project_dir }}
+        nohup python3 -m streamlit run dashboard/app.py \
+          --server.address 0.0.0.0 \
+          --server.port 8501 \
+          --server.headless true \
+          > {{ project_dir }}/logs/streamlit.log 2>&1 &
+        echo $! > {{ project_dir }}/streamlit.pid
+      become_user: azureuser
+
+    # ── 9. Start demo page HTTP server ─────────────────────────────────────
+    - name: Start demo page server on port 5000
+      shell: |
+        cd {{ project_dir }}/frontend
+        nohup python3 -m http.server 5000 \
+          > {{ project_dir }}/logs/httpserver.log 2>&1 &
+        echo $! > {{ project_dir }}/httpserver.pid
+      become_user: azureuser
+
+    # ── 10. Confirm everything is running ──────────────────────────────────
+    - name: Print deployment summary
+      debug:
+        msg:
+          - "✅ Deployment complete!"
+          - "FastAPI:    http://{{ ansible_host }}:8000"
+          - "Swagger:    http://{{ ansible_host }}:8000/docs"
+          - "Dashboard:  http://{{ ansible_host }}:8501"
+          - "Demo app:   http://{{ ansible_host }}:5000"
+          - "Active ver: v2 (new deployment — tracker active)"

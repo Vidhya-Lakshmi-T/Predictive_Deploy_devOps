@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>QuikShop — v2.0 NEW RELEASE</title>
+  <style>
+    :root{
+      --bg:#0D0D1A;--surface:#16162A;--surface2:#1E1E35;
+      --border:#2E2E50;--text:#E8E8FF;--muted:#8888AA;--hint:#555577;
+      --accent:#7C3AED;--accent2:#A855F7;--red:#EF4444;--red-bg:#2A0F0F;
+      --amber:#F59E0B;--amber-bg:#261A00;--radius:10px
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+         background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── Alert bar — loud, scrolling ── */
+    .alert-bar{
+      background:var(--red);padding:8px 20px;
+      font-size:12px;font-weight:700;color:#fff;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      letter-spacing:.03em
+    }
+    .alert-icon{animation:shake .5s infinite}
+    @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+
+    /* ── Header ── */
+    header{
+      background:var(--surface);border-bottom:1px solid var(--border);
+      padding:0 28px;height:60px;
+      display:flex;align-items:center;justify-content:space-between
+    }
+    .logo{font-size:20px;font-weight:900;color:var(--accent2);letter-spacing:-.5px}
+    .logo-v{font-size:11px;font-weight:600;color:var(--muted);
+             background:var(--surface2);padding:2px 8px;border-radius:4px;margin-left:6px}
+    .nav{display:flex;gap:6px}
+    .nav a{font-size:13px;color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer}
+    .nav a:hover{background:var(--surface2);color:var(--text)}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .cart-btn{
+      background:var(--accent);color:#fff;border:none;
+      padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer
+    }
+
+    /* ── Hero ── */
+    .hero{
+      background:linear-gradient(135deg,#0D0D1A 0%,#1A0A2E 50%,#0D1A2E 100%);
+      border-bottom:1px solid var(--border);padding:52px 28px;text-align:center
+    }
+    .hero-badge{
+      display:inline-block;background:var(--surface2);color:var(--accent2);
+      border:1px solid var(--accent);font-size:11px;font-weight:700;
+      padding:4px 14px;border-radius:99px;text-transform:uppercase;
+      letter-spacing:.08em;margin-bottom:18px
+    }
+    .hero h2{font-size:40px;font-weight:900;color:#fff;line-height:1.08;margin-bottom:10px}
+    .hero h2 span{color:var(--accent2)}
+    .hero p{font-size:15px;color:var(--muted);margin-bottom:28px}
+    .hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .hb1{background:var(--accent);color:#fff;border:none;
+          padding:13px 28px;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer}
+    .hb2{background:transparent;color:var(--accent2);border:1.5px solid var(--accent);
+          padding:13px 28px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer}
+    .hb3{background:var(--red);color:#fff;border:none;
+          padding:13px 28px;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer}
+
+    /* ── Products ── */
+    .section{padding:24px 28px 0}
+    .section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .section-title{font-size:17px;font-weight:700;color:var(--text)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:0 28px 24px}
+    .card{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      overflow:hidden;transition:border-color .2s
+    }
+    .card:hover{border-color:var(--accent)}
+    .card-img{
+      height:130px;background:var(--surface2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:48px;position:relative
+    }
+    .badge{
+      position:absolute;top:8px;left:8px;background:var(--red);color:#fff;
+      font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px
+    }
+    .card-body{padding:14px}
+    .card-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+    .card-desc{font-size:11.5px;color:var(--hint);margin-bottom:10px;line-height:1.4}
+    .price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+    .price{font-size:17px;font-weight:800;color:var(--accent2)}
+    .price-old{font-size:12px;color:var(--hint);text-decoration:line-through}
+    .add-btn{
+      width:100%;background:var(--surface2);color:var(--accent2);
+      border:1px solid var(--accent);border-radius:7px;padding:8px;
+      font-size:13px;font-weight:700;cursor:pointer
+    }
+    .add-btn:hover{background:var(--accent);color:#fff}
+
+    /* ── BROKEN checkout ── */
+    .checkout-wrap{
+      background:var(--surface);border-top:2px dashed var(--accent);
+      padding:28px
+    }
+    .checkout-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .checkout-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+
+    /* Confusing: 4 different buttons, no clear primary action */
+    .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .pay-btn-main{
+      grid-column:1/-1;background:var(--red);color:#fff;border:none;
+      padding:16px;border-radius:9px;font-size:15px;font-weight:800;cursor:pointer
+    }
+    .pay-btn-upi{
+      background:transparent;color:#FCD34D;border:1.5px solid #854D0E;
+      padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer
+    }
+    .pay-btn-cod{
+      background:var(--surface2);color:var(--muted);border:1px solid var(--border);
+      padding:12px;border-radius:8px;font-size:13px;cursor:pointer
+    }
+    .pay-btn-emi{
+      grid-column:1/-1;background:transparent;color:var(--hint);
+      border:1px dashed var(--border);padding:10px;border-radius:8px;
+      font-size:12px;cursor:pointer
+    }
+
+    /* Error messages — contradictory */
+    .msg{
+      border-radius:8px;padding:10px 14px;margin-top:8px;
+      font-size:13px;font-weight:500;display:none
+    }
+    .msg-proc{background:#1A0A2E;border:1px solid var(--accent);color:var(--accent2)}
+    .msg-err{background:var(--red-bg);border:1px solid var(--red);color:#FCA5A5}
+    .msg-warn{background:var(--amber-bg);border:1px solid var(--amber);color:#FCD34D}
+    .msg-sess{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+
+    /* Random error popup */
+    .popup{
+      position:fixed;bottom:20px;right:20px;width:260px;
+      background:var(--surface);border:1px solid var(--red);border-radius:10px;
+      padding:14px 16px;z-index:999;display:none;box-shadow:0 4px 24px rgba(0,0,0,.5)
+    }
+    .popup-title{color:var(--red);font-size:12px;font-weight:700;margin-bottom:5px}
+    .popup-msg{color:#FCA5A5;font-size:11.5px;line-height:1.5}
+    .popup-x{position:absolute;top:8px;right:12px;color:var(--hint);cursor:pointer;font-size:14px}
+
+    /* ── SIGNAL MONITOR PANEL ── */
+    .monitor{
+      background:#070712;border-top:2px solid var(--accent);padding:24px 28px
+    }
+    .monitor-title{
+      font-size:12px;font-weight:700;color:var(--accent2);
+      text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;
+      display:flex;align-items:center;gap:8px
+    }
+    .live-dot{
+      width:8px;height:8px;border-radius:50%;background:var(--red);
+      animation:livepulse 1s infinite
+    }
+    @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.2}}
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px}
+    .stat-label{font-size:10px;font-weight:700;text-transform:uppercase;
+                letter-spacing:.07em;color:var(--accent2);margin-bottom:5px}
+    .stat-val{font-size:26px;font-weight:900;color:#fff;margin-bottom:3px}
+    .stat-desc{font-size:10.5px;color:var(--hint);line-height:1.4}
+    #pipeline-display{
+      background:var(--surface);border:1px solid var(--border);border-radius:8px;
+      padding:14px;font-family:monospace;font-size:11.5px;
+      color:var(--muted);min-height:60px;line-height:1.8
+    }
+    .monitor-footer{
+      margin-top:10px;font-size:11.5px;color:var(--hint);line-height:1.7;
+      border-top:1px solid var(--border);padding-top:10px
+    }
+    .monitor-footer strong{color:var(--muted)}
+  </style>
+</head>
+<body>
+
+<div class="alert-bar">
+  <span class="alert-icon">⚠</span>
+  VERSION 2.0 — NEW DEPLOYMENT &nbsp;·&nbsp; Confusion tracker ACTIVE &nbsp;·&nbsp; Signals sent to FastAPI every 5 seconds
+</div>
+
+<header>
+  <div>
+    <span class="logo">QuikShop</span>
+    <span class="logo-v">v2.0-beta</span>
+  </div>
+  <nav class="nav">
+    <a>Deals</a><a>Electronics</a><a>Fashion</a><a>More</a>
+  </nav>
+  <div class="header-right">
+    <button class="cart-btn" id="cart-btn">Cart (<span id="cart-count">0</span>)</button>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">🔥 Mega Sale — 80% Off</div>
+  <h2>Biggest sale of the year.<br><span>Don't miss out!</span></h2>
+  <p>Shop thousands of products at unbeatable prices</p>
+  <div class="hero-btns">
+    <button class="hb1" id="shop-btn" onclick="heroScroll()">Shop Now</button>
+    <button class="hb2" onclick="heroScroll()">View Deals</button>
+    <button class="hb3" onclick="heroScroll()">Flash Offers</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-row">
+    <div class="section-title">Today's Deals</div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-img">🎮<div class="badge">80% OFF</div></div>
+    <div class="card-body">
+      <div class="card-name">Gaming Console Pro X</div>
+      <div class="card-desc">Next-gen · 4K · 1TB storage</div>
+      <div class="price-row"><div class="price">₹8,999</div><div class="price-old">₹44,999</div></div>
+      <button class="add-btn" onclick="addToCart('console',this)">Add to Cart</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-img">📱<div class="badge">HOT</div></div>
+    <div class="card-body">
+      <div class="card-name">UltraPhone 15 Pro</div>
+      <div class="card-desc">108MP · 5G · AMOLED · 256GB</div>
+      <div class="price-row"><div class="price">₹24,999</div><div class="price-old">₹79,999</div></div>
+      <button class="add-btn" onclick="addToCart('phone',this)">Add to Cart</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-img">💻<div class="badge">NEW</div></div>
+    <div class="card-body">
+      <div class="card-name">AirBook Slim 14"</div>
+      <div class="card-desc">Intel i7 · 16 GB · 512 GB SSD</div>
+      <div class="price-row"><div class="price">₹42,999</div><div class="price-old">₹89,999</div></div>
+      <button class="add-btn" onclick="addToCart('laptop',this)">Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<!-- BROKEN CHECKOUT — 4 buttons, all fail differently -->
+<div class="checkout-wrap">
+  <div class="checkout-title">Complete Your Order</div>
+  <div class="checkout-sub">Choose a payment method to proceed</div>
+  <div class="btn-grid">
+    <button class="pay-btn-main" id="pay-main" onclick="tryPay('main')">Pay Now</button>
+    <button class="pay-btn-upi"  onclick="tryPay('upi')">Pay via UPI</button>
+    <button class="pay-btn-cod"  onclick="tryPay('cod')">Cash on Delivery</button>
+    <button class="pay-btn-emi"  onclick="tryPay('emi')">Pay in EMI (0% interest)</button>
+  </div>
+  <div class="msg msg-proc" id="m-proc">⏳ Connecting to payment server…</div>
+  <div class="msg msg-err"  id="m-err">❌ Payment declined. Please try a different method.</div>
+  <div class="msg msg-warn" id="m-warn">⚠ Gateway timeout. Server is overloaded. Try again.</div>
+  <div class="msg msg-sess" id="m-sess">🔄 Session expired. Your cart may have been reset.</div>
+</div>
+
+<!-- Random error popup -->
+<div class="popup" id="popup">
+  <div class="popup-x" onclick="document.getElementById('popup').style.display='none'">✕</div>
+  <div class="popup-title">⚠ System Error</div>
+  <div class="popup-msg" id="popup-msg">An unexpected error occurred.</div>
+</div>
+
+<!-- SIGNAL MONITOR -->
+<div class="monitor">
+  <div class="monitor-title">
+    <div class="live-dot"></div>
+    Live Confusion Signal Monitor — sending to FastAPI /track
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Rage Clicks</div>
+      <div class="stat-val" id="s-rage">0</div>
+      <div class="stat-desc">3+ rapid clicks same spot. Weight: +30 per event. Signals extreme UI frustration.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Scroll Osc.</div>
+      <div class="stat-val" id="s-scroll">0</div>
+      <div class="stat-desc">Up-down reversals. Weight: +20. User cannot find content — lost navigation.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Repeated Act.</div>
+      <div class="stat-val" id="s-repeat">0</div>
+      <div class="stat-desc">Same button 3+ times. Weight: +25. Action not producing expected result.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Idle (sec)</div>
+      <div class="stat-val" id="s-idle">0</div>
+      <div class="stat-desc">No action for 5s. Weight: +15 per event. User frozen — overwhelmed or lost.</div>
+    </div>
+  </div>
+  <div id="pipeline-display">Waiting for first interaction… Try clicking "Pay Now" multiple times.</div>
+  <div class="monitor-footer">
+    <strong>Why this panel exists:</strong> Every count above is sent to
+    <strong>FastAPI /track</strong> as a JSON batch every 5 seconds.
+    FastAPI runs <strong>confusion_engine.py</strong> → <strong>pattern_analyzer.py</strong> →
+    computes Cognitive Load Index (0–100). If score ≥ 70 →
+    <strong>Jenkins polls /score/latest</strong> → runs
+    <strong>ansible-playbook rollback.yml</strong> → switches active_version.txt to v1 →
+    you are served NovaBuy instead. <strong>No human involved.</strong>
+  </div>
+</div>
+
+<script>
+  let cartN = 0, tryCount = 0;
+  const errors = [
+    'Payment gateway connection lost.',
+    'CSRF token invalid. Please refresh.',
+    'Your session has timed out.',
+    'Database write error. Order not saved.',
+    'Server is temporarily unavailable (503).'
+  ];
+
+  function heroScroll() {
+    window.scrollTo({top:500,behavior:'smooth'});
+    setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),700);
+    setTimeout(()=>window.scrollTo({top:500,behavior:'smooth'}),1400);
+  }
+
+  function addToCart(item, btn) {
+    cartN++;
+    document.getElementById('cart-count').textContent = cartN;
+    btn.textContent = '✓ Added';
+    setTimeout(()=>btn.textContent='Add to Cart', 1200);
+  }
+
+  function hideAll() {
+    ['m-proc','m-err','m-warn','m-sess'].forEach(id=>{
+      document.getElementById(id).style.display='none';
+    });
+  }
+
+  function tryPay(method) {
+    tryCount++;
+    hideAll();
+    const btn = document.getElementById('pay-main');
+    const cycle = tryCount % 4;
+    if (cycle === 1) {
+      btn.textContent = '⏳ Processing…'; btn.disabled = true;
+      document.getElementById('m-proc').style.display='block';
+      setTimeout(()=>{
+        btn.textContent='Pay Now'; btn.disabled=false;
+        document.getElementById('m-proc').style.display='none';
+        document.getElementById('m-err').style.display='block';
+        showPopup();
+      }, 3500);
+    } else if (cycle === 2) {
+      document.getElementById('m-warn').style.display='block';
+      setTimeout(()=>document.getElementById('m-warn').style.display='none', 3000);
+    } else if (cycle === 3) {
+      document.getElementById('m-sess').style.display='block';
+      setTimeout(()=>document.getElementById('m-sess').style.display='none', 3000);
+    } else {
+      document.getElementById('m-err').style.display='block';
+      setTimeout(()=>document.getElementById('m-err').style.display='none', 2500);
+    }
+  }
+
+  function showPopup() {
+    document.getElementById('popup-msg').textContent =
+      errors[Math.floor(Math.random()*errors.length)];
+    const p = document.getElementById('popup');
+    p.style.display='block';
+    setTimeout(()=>p.style.display='none', 5000);
+  }
+
+  setTimeout(showPopup, 18000);
+  setTimeout(showPopup, 40000);
+
+  // Update stat cards from tracker.js console output
+  const origDbg = console.debug.bind(console);
+  console.debug = function(...a) {
+    origDbg(...a);
+    const m = a.join(' ');
+    const inc = id => { const e=document.getElementById(id); if(e) e.textContent=parseInt(e.textContent||0)+1; };
+    if (m.includes('Rage'))     inc('s-rage');
+    if (m.includes('Scroll'))   inc('s-scroll');
+    if (m.includes('Repeated')) inc('s-repeat');
+    if (m.includes('Idle'))     inc('s-idle');
+  };
+</script>
+
+<script src="tracker.js"></script>
+</body>
+</html>

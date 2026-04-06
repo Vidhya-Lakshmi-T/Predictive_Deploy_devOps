@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Predictive Deploy - Demo Console</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,sans-serif;background:#edf2f7;color:#1a202c}
+    header{background:#172036;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.22)}
+    header h1{font-size:18px;font-weight:700}
+    #state-badge{font-size:11px;padding:4px 12px;border-radius:999px;font-weight:700;background:#14532d;color:#bbf7d0}
+    #session-label{font-size:11px;background:#24324f;padding:4px 10px;border-radius:999px;color:#bfdbfe;font-family:monospace}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:16px;padding:16px;max-width:1320px;margin:0 auto}
+    .stack{display:grid;gap:14px}
+    .card{background:#fff;border:1px solid #dbe4ef;border-radius:14px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+    h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#24324f}
+    h3{font-size:13px;font-weight:700;margin-bottom:8px;color:#1e293b}
+    p{color:#64748b;font-size:13px;line-height:1.6;margin-bottom:10px}
+    .group{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #eef2f7}
+    .group:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+    .group-title{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:6px}
+    .btn{background:#3b82f6;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:13px;cursor:pointer;margin:3px;transition:.15s}
+    .btn:hover{background:#2563eb}
+    .btn.gray{background:#64748b}
+    .btn.gray:hover{background:#475569}
+    .btn.red{background:#b91c1c}
+    .btn.red:hover{background:#991b1b}
+    .hint{font-size:12px;color:#94a3b8;margin-top:6px;line-height:1.5}
+    .danger{background:#fff5f5;border:1px solid #fecaca}
+    .status-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+    .pill.bad{background:#fee2e2;color:#991b1b}
+    .pill.good{background:#dcfce7;color:#166534}
+    .debug-log{background:#f8fafc;border:1px solid #dbe4ef;border-radius:10px;padding:12px;font-family:monospace;font-size:11px;color:#334155;min-height:90px;max-height:170px;overflow-y:auto;white-space:pre-wrap}
+    .links a{font-size:12px;color:#2563eb;margin-right:12px;text-decoration:none}
+    .links a:hover{text-decoration:underline}
+    .preview-frame{width:100%;height:360px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
+    .pipeline-wrap{position:sticky;top:72px}
+    .pipeline-panel{background:#172036;border-radius:14px;padding:16px;min-height:460px;box-shadow:0 12px 30px rgba(15,23,42,.18)}
+    #pipeline-display{font-size:12px;line-height:1.7;color:#e2e8f0}
+    .eyebrow{font-size:11px;color:#64748b;font-weight:700;padding:0 0 6px 2px;text-transform:uppercase;letter-spacing:.08em}
+    @media (max-width: 1080px){
+      .layout{grid-template-columns:1fr}
+      .pipeline-wrap{position:static}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:10px">
+    <h1>Predictive Deploy - Live Demo Console</h1>
+    <span id="state-badge">MONITORING</span>
+  </div>
+  <span id="session-label">loading...</span>
+</header>
+
+<div class="layout">
+  <div class="stack">
+    <div class="card">
+      <h2>Trigger User Confusion Signals</h2>
+      <p>Use these controls to simulate user frustration. The tracker batches signals every 5 seconds and sends them to the backend.</p>
+
+      <div class="group">
+        <div class="group-title">Rage Clicks</div>
+        <button class="btn" id="buy-btn">Buy Now</button>
+        <button class="btn" id="buy-btn">Buy Now</button>
+        <button class="btn" id="buy-btn">Buy Now</button>
+        <button class="btn" id="buy-btn">Buy Now</button>
+        <div class="hint">Click 4 or more times rapidly in the same spot to fire a `rage_click` signal.</div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Repeated Actions</div>
+        <button class="btn gray" id="submit-btn">Submit Form</button>
+        <button class="btn gray" id="submit-btn">Submit Form</button>
+        <button class="btn gray" id="submit-btn">Submit Form</button>
+        <div class="hint">Click the same action 3 or more times to fire `repeated_action`.</div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Scroll Oscillation</div>
+        <button class="btn gray" onclick="simulateScroll()">Simulate Scroll Oscillation</button>
+        <div class="hint">Rapid up/down reversal creates a `scroll_oscillation` signal.</div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Idle Hesitation</div>
+        <button class="btn gray" onclick="log('Idle timer reset. Stop interacting for 5s...')">Reset Idle Timer</button>
+        <div class="hint">Stop interacting for 5 seconds to fire `idle`.</div>
+      </div>
+
+      <div class="group danger" style="padding:14px;border-radius:10px">
+        <div class="group-title" style="color:#b91c1c">Force Auto Rollback</div>
+        <button class="btn red" onclick="forceRollback()">Trigger All Signals Now</button>
+        <div class="hint" style="color:#b91c1c">Sends rage click + scroll + repeated action + idle in one batch so the prediction jumps to HIGH and rollback executes immediately.</div>
+      </div>
+
+      <div class="debug-log" id="debug-log">Tracker loaded. Waiting for signals...
+</div>
+    </div>
+
+    <div class="card">
+      <h2>Live Switched Frontend</h2>
+      <div class="status-row">
+        <div>
+          <div id="live-version-status" class="pill bad">Checking active version...</div>
+          <p id="live-version-text">This preview uses the actual `/app` route that switches between `app_v2_broken.html` and `app_v1_stable.html`.</p>
+        </div>
+        <div>
+          <div id="live-version-file" class="pill good">Loading file...</div>
+          <p>The operator console you are on now does not switch layouts. The preview below is the real served application.</p>
+        </div>
+      </div>
+      <iframe id="live-app-frame" class="preview-frame" src="http://localhost:8000/app" title="Active deployment preview"></iframe>
+    </div>
+
+    <div class="card">
+      <h2>How To Read This Demo</h2>
+      <p>The right panel shows the decision pipeline. The preview card above shows the actual frontend currently live on `/app`.</p>
+      <p>Broken and stable are intentionally different in code. If they looked the same before, it was because the console page was static while the real version switch happens only on the active app route.</p>
+    </div>
+
+    <div class="card links">
+      <h2>Quick Links</h2>
+      <a href="http://localhost:8501" target="_blank">Streamlit Dashboard</a>
+      <a href="http://localhost:8000/app" target="_blank">Active App Route</a>
+      <a href="http://localhost:8000/docs" target="_blank">API Docs</a>
+      <a href="http://localhost:8000/rollbacks" target="_blank">Rollback Log</a>
+      <a href="http://localhost:8000/patterns" target="_blank">Pattern Log</a>
+    </div>
+  </div>
+
+  <div class="pipeline-wrap">
+    <div class="eyebrow">Live Pipeline Output</div>
+    <div class="pipeline-panel">
+      <div id="pipeline-display">
+        Waiting for first signal batch.<br><br>
+        Interact with the controls on the left.<br>
+        Pipeline updates every 5 seconds.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function refreshBadges() {
+    const sid = window._trackerGetSession
+      ? window._trackerGetSession()
+      : sessionStorage.getItem("confusion_session_id") || "?";
+    document.getElementById("session-label").textContent = "Session: " + sid.substring(0, 18);
+  }
+
+  async function refreshLiveVersion() {
+    const badge = document.getElementById("live-version-status");
+    const fileBadge = document.getElementById("live-version-file");
+    const text = document.getElementById("live-version-text");
+    const frame = document.getElementById("live-app-frame");
+    if (!badge || !fileBadge || !text || !frame) return;
+
+    try {
+      const res = await fetch("http://localhost:8000/version");
+      const data = await res.json();
+      const isStable = !!data.is_stable;
+      badge.textContent = isStable ? "STABLE v1 LIVE" : "BROKEN v2 LIVE";
+      badge.className = "pill " + (isStable ? "good" : "bad");
+      fileBadge.textContent = data.filename || "unknown";
+      fileBadge.className = "pill " + (isStable ? "good" : "bad");
+      text.textContent = isStable
+        ? "The active app preview is serving the restored stable checkout experience."
+        : "The active app preview is still serving the broken deployment with the confusing checkout."
+      frame.src = "http://localhost:8000/app?t=" + Date.now();
+    } catch (e) {
+      badge.textContent = "Backend unavailable";
+      badge.className = "pill bad";
+      fileBadge.textContent = "No preview";
+      fileBadge.className = "pill bad";
+      text.textContent = "Could not load active version details from the backend.";
+    }
+  }
+
+  function log(msg) {
+    const el = document.getElementById("debug-log");
+    if (el) {
+      el.textContent += "[" + new Date().toLocaleTimeString() + "] " + msg + "\n";
+      el.scrollTop = el.scrollHeight;
+    }
+  }
+
+  function simulateScroll() {
+    let i = 0;
+    const iv = setInterval(() => {
+      window.scrollBy(0, i++ % 2 === 0 ? 300 : -300);
+      if (i >= 8) clearInterval(iv);
+    }, 150);
+    log("Scroll oscillation simulated");
+  }
+
+  async function forceRollback() {
+    const sid = (window._trackerGetSession
+      ? window._trackerGetSession()
+      : sessionStorage.getItem("confusion_session_id") || "demo") + "-force";
+    log("Sending HIGH confusion batch directly to /track...");
+
+    try {
+      const res = await fetch("http://localhost:8000/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sid,
+          events: [
+            { session_id: sid, event_type: "rage_click", count: 5 },
+            { session_id: sid, event_type: "scroll_oscillation", count: 4 },
+            { session_id: sid, event_type: "repeated_action", count: 3 },
+            { session_id: sid, event_type: "idle", count: 2 }
+          ]
+        })
+      });
+
+      const data = await res.json();
+      log("Response -> prediction: " + data.predicted_issue + " | action: " + data.action_taken + " | state: " + data.system_state);
+
+      if (window._trackerForceUpdate) window._trackerForceUpdate(data);
+      if (data.rollback_triggered && window._trackerShowRollback) {
+        window._trackerShowRollback(data);
+        refreshLiveVersion();
+        const b = document.getElementById("state-badge");
+        if (b) {
+          b.textContent = "ROLLED BACK";
+          b.style.background = "#7f1d1d";
+          b.style.color = "#fecaca";
+        }
+      }
+    } catch (e) {
+      log("ERROR: " + e.message + " - is backend running on port 8000?");
+    }
+  }
+
+  const originalDebug = console.debug.bind(console);
+  console.debug = function (...args) {
+    originalDebug(...args);
+    log(args.join(" "));
+  };
+</script>
+
+<script src="tracker.js"></script>
+<script>
+  refreshBadges();
+  refreshLiveVersion();
+  setInterval(refreshLiveVersion, 4000);
+</script>
+</body>
+</html>

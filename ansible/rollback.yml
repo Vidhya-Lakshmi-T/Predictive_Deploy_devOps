@@ -1,0 +1,70 @@
+# =============================================================================
+# ansible/rollback.yml — Rollback playbook
+#
+# Called by Jenkins when confusion score >= 70.
+# Switches active version from v2 (broken) to v1 (stable) on VM2.
+# Does NOT restart services — just flips the version file.
+# FastAPI reads active_version.txt on every /app request — change is instant.
+# =============================================================================
+
+- name: Rollback to stable version v1
+  hosts: app_servers
+  become: yes
+
+  vars:
+    project_dir: /opt/predictive-deploy
+
+  tasks:
+
+    # ── 1. Switch version ──────────────────────────────────────────────────
+    - name: Switch active version to v1 (stable)
+      copy:
+        content: "v1"
+        dest: "{{ project_dir }}/frontend/active_version.txt"
+        owner: azureuser
+
+    - name: Verify version switch
+      command: cat {{ project_dir }}/frontend/active_version.txt
+      register: active_version
+
+    - name: Confirm version is now v1
+      debug:
+        msg: "Active version is now: {{ active_version.stdout }}"
+
+    # ── 2. Log the rollback event ──────────────────────────────────────────
+    - name: Log rollback to file
+      shell: |
+        echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') ROLLBACK: v2 -> v1 (triggered by Jenkins confusion gate)" \
+        >> {{ project_dir }}/logs/rollback_history.log
+
+    # ── 3. Verify FastAPI is still running ─────────────────────────────────
+    - name: Check FastAPI is still responsive
+      uri:
+        url: http://localhost:8000/health
+        method: GET
+        status_code: 200
+      retries: 3
+      delay: 2
+      ignore_errors: yes
+
+    # ── 4. Verify the stable version is being served ───────────────────────
+    - name: Confirm /version endpoint shows v1
+      uri:
+        url: http://localhost:8000/version
+        method: GET
+        status_code: 200
+      register: version_response
+
+    - name: Show active version from API
+      debug:
+        msg: "API reports active version: {{ version_response.json.active_version }} — {{ version_response.json.label }}"
+
+    # ── 5. Summary ──────────────────────────────────────────────────────────
+    - name: Rollback summary
+      debug:
+        msg:
+          - "🚨 ROLLBACK COMPLETE"
+          - "Previous: v2 (app_v2_broken.html — broken checkout)"
+          - "Current:  v1 (app_v1_stable.html — working checkout)"
+          - "Users will now see the stable version at: http://{{ ansible_host }}:8000/app"
+          - "Stable since: {{ ansible_date_time.iso8601 }}"

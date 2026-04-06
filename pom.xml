@@ -1,0 +1,81 @@
+<!--
+  pom.xml - Maven Build Configuration
+  
+  What this does:
+    - Manages Java dependencies for integration tests
+    - Tests call your FastAPI endpoints from Java (JUnit + Apache HttpClient)
+    - Jenkins runs "mvn clean test" which validates the API is working
+    - Test results appear in Jenkins as JUnit reports
+  
+  Tests included:
+    - HealthCheckTest       : GET /health returns 200
+    - TrackEndpointTest     : POST /track with events returns confusion score
+    - RollbackThresholdTest : High confusion score triggers rollback flag
+    - VersionSwitchTest     : GET /version returns correct version info
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.predictive.deploy</groupId>
+  <artifactId>confusion-api-tests</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+  <name>Predictive Deploy — API Integration Tests</name>
+
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Change to VM2's IP when running in CI/CD. Localhost for local testing. -->
+    <api.base.url>http://10.0.0.5:8000</api.base.url>
+  </properties>
+
+  <dependencies>
+
+    <!-- JUnit 4 — test framework -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Apache HttpClient — makes HTTP calls to FastAPI -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.14</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Jackson — parses JSON responses from FastAPI -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.15.2</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Surefire — runs JUnit tests, generates XML reports for Jenkins -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.1.2</version>
+        <configuration>
+          <systemPropertyVariables>
+            <api.base.url>${api.base.url}</api.base.url>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
