@@ -51,7 +51,7 @@ pipeline {
                 '''
                 
                 echo 'Running Maven build and Java tests...'
-                sh 'mvn -B clean test -f pom.xml'
+                sh 'mvn -B clean test -f pom.xml -Dapi.base.url=http://localhost:8000'
             }
             post {
                 always {
