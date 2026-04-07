@@ -22,7 +22,8 @@ pipeline {
         // VM2 private IP — Ansible uses this to deploy
         APP_SERVER_IP  = '40.80.93.95'          // replace with your VM2 PRIVATE IP
         APP_SERVER_USER = 'azureuser'
-        API_URL        = "http://${APP_SERVER_IP}:8000"
+        LOCAL_API_URL = "http://localhost:8000"
+        REMOTE_API_URL = "http://${APP_SERVER_IP}:8000"
         CONFUSION_THRESHOLD = '70'
     }
 
@@ -41,6 +42,14 @@ pipeline {
         // These tests simulate HTTP calls to /track and verify the pipeline logic.
         stage('Maven Build & Java API Tests') {
             steps {
+                echo 'Starting backend...'
+
+                sh '''
+                    cd backend
+                    nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
+                    sleep 10
+                '''
+                
                 echo 'Running Maven build and Java tests...'
                 sh 'mvn -B clean test -f pom.xml'
             }
@@ -106,11 +115,11 @@ pipeline {
                 sleep(time: 30, unit: 'SECONDS')
 
                 script {
-                    echo "Querying confusion score from ${API_URL}/score/latest ..."
+                    echo "Querying confusion score from ${REMOTE_API_URL}/score/latest ..."
 
                     def response = sh(
                         script: """
-                            curl -s --max-time 10 ${API_URL}/score/latest \
+                            curl -s --max-time 10 ${REMOTE_API_URL}/score/latest \
                             | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('confusion_score', 0))"
                         """,
                         returnStdout: true
@@ -133,7 +142,7 @@ pipeline {
                         '''
 
                         // Also notify the FastAPI so it logs the rollback
-                        sh "curl -s -X POST ${API_URL}/rollback?session_id=jenkins-pipeline"
+                        sh "curl -s -X POST ${REMOTE_API_URL}/rollback?session_id=jenkins-pipeline"
 
                         // Fail the build so GitHub shows this commit as failed
                         error("AUTO ROLLBACK TRIGGERED — Confusion score ${score} >= ${CONFUSION_THRESHOLD}. Stable version v1 restored.")
@@ -153,7 +162,7 @@ pipeline {
             echo """
             ✅ PIPELINE SUCCESSFUL
             Deployment confirmed. Confusion score was acceptable.
-            App is live at: ${API_URL}
+            App is live at: ${REMOTE_API_URL}
             """
         }
         failure {
