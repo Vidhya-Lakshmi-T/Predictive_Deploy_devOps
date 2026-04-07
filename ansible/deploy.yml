@@ -152,7 +152,7 @@
       shell: |
         cd {{ project_dir }}/backend
         nohup python3 -m uvicorn main:app \
-          --host 0.0.0.0 \
+          --host 40.80.93.95 \
           --port 8000 \
           > {{ project_dir }}/logs/fastapi.log 2>&1 &
         echo $! > {{ project_dir }}/fastapi.pid
@@ -166,7 +166,7 @@
 
     - name: Verify FastAPI health
       uri:
-        url: http://localhost:8000/health
+        url: http://40.80.93.95:8000/health
         method: GET
         status_code: 200
       retries: 5
@@ -177,7 +177,7 @@
       shell: |
         cd {{ project_dir }}
         nohup python3 -m streamlit run dashboard/app.py \
-          --server.address 0.0.0.0 \
+          --server.address 40.80.93.95 \
           --server.port 8501 \
           --server.headless true \
           > {{ project_dir }}/logs/streamlit.log 2>&1 &
