@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const API_ENDPOINT        = "http://localhost:8000/track";
+  const API_ENDPOINT        = "http://40.80.93.95:8000/track";
   const SEND_INTERVAL_MS    = 5000;
   const RAGE_CLICK_WINDOW   = 1000;
   const RAGE_CLICK_THRESH   = 3;
