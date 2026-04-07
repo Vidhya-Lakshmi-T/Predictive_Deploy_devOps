@@ -40,7 +40,7 @@
     # ── 3. Verify FastAPI is still running ─────────────────────────────────
     - name: Check FastAPI is still responsive
       uri:
-        url: http://localhost:8000/health
+        url: http://40.80.93.95:8000/health
         method: GET
         status_code: 200
       retries: 3
@@ -50,7 +50,7 @@
     # ── 4. Verify the stable version is being served ───────────────────────
     - name: Confirm /version endpoint shows v1
       uri:
-        url: http://localhost:8000/version
+        url: http://40.80.93.95:8000/version
         method: GET
         status_code: 200
       register: version_response
