@@ -166,7 +166,7 @@
 
     - name: Verify FastAPI health
       uri:
-        url: url: http://{{ ansible_host }}:8000/health
+        url: http://{{ ansible_host }}:8000/health
         method: GET
         status_code: 200
       retries: 5
