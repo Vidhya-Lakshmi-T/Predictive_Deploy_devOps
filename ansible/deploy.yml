@@ -152,7 +152,7 @@
       shell: |
         cd {{ project_dir }}/backend
         nohup python3 -m uvicorn main:app \
-          --host 40.80.93.95 \
+          --host 0.0.0.0 \
           --port 8000 \
           > {{ project_dir }}/logs/fastapi.log 2>&1 &
         echo $! > {{ project_dir }}/fastapi.pid
@@ -166,7 +166,7 @@
 
     - name: Verify FastAPI health
       uri:
-        url: http://40.80.93.95:8000/health
+        url: url: http://{{ ansible_host }}:8000/health
         method: GET
         status_code: 200
       retries: 5
