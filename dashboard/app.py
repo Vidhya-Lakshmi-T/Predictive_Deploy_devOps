@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 import streamlit as st
 
-API_BASE = f"http://{HOST}:8000"
+API_BASE = "http://localhost:8000"
 ROLLBACK_THRESHOLD = 70
 REFRESH_INTERVAL = 20
 DISPLAY_TZ = ZoneInfo("Asia/Kolkata")
